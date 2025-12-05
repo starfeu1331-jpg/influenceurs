@@ -145,7 +145,7 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
 // 2. Potentiel organique (0-100) - Basé sur ROI potentiel (tarifs × stats organiques)
 function computeOrganicPotentialScore(
   influencer: Influencer & { 
-    platforms: { platform: string; isMain: boolean; followers?: number }[];
+    platforms: { platform: string; isMain: boolean; followers?: number | null }[];
     pricing: InfluencerPricing[];
   },
   statsSnapshots: StatsSnapshot[]
