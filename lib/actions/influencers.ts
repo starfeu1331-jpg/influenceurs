@@ -64,6 +64,7 @@ export async function createInfluencer(formData: FormData) {
     },
   });
 
+  revalidatePath('/influencers');
   redirect(`/influencers/${influencer.id}`);
 }
 

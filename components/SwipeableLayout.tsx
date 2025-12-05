@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, PanInfo } from 'framer-motion';
 
@@ -11,14 +11,44 @@ const pages = [
   { path: '/calendar', name: 'Calendrier' },
 ];
 
+// Pages où le swipe est désactivé (formulaires, édition)
+const disableSwipeRoutes = [
+  '/influencers/new',
+  '/influencers/compare',
+  '/projects/new',
+];
+
 export default function SwipeableLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [direction, setDirection] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Détection mobile/desktop
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // < 1024px = mobile/tablet
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const currentIndex = pages.findIndex(page => page.path === pathname);
+  
+  // Vérifier si on est sur une page de formulaire ou d'édition
+  const isFormPage = disableSwipeRoutes.some(route => pathname.startsWith(route)) || 
+                     pathname.includes('/influencers/') && pathname !== '/influencers' ||
+                     pathname.includes('/projects/') && pathname !== '/projects/pipeline';
+
+  // Désactiver le swipe si : desktop OU page de formulaire
+  const swipeDisabled = !isMobile || isFormPage;
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Ne rien faire si le swipe est désactivé
+    if (swipeDisabled) return;
+
     const swipeThreshold = 100;
     const swipeVelocity = 300;
 
@@ -43,11 +73,11 @@ export default function SwipeableLayout({ children }: { children: React.ReactNod
 
   return (
     <motion.div
-      drag="x"
+      drag={swipeDisabled ? false : "x"}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
-      className="cursor-grab active:cursor-grabbing"
+      className={swipeDisabled ? "" : "cursor-grab active:cursor-grabbing"}
     >
       {children}
     </motion.div>
