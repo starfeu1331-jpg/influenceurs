@@ -105,18 +105,19 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): nu
 
 // 2. Potentiel organique (0-100)
 function computeOrganicPotentialScore(
-  influencer: Influencer,
+  influencer: Influencer & { platforms: { platform: string; isMain: boolean }[] },
   statsSnapshots: StatsSnapshot[]
 ): number {
   // Filtrer sur la plateforme principale
+  const mainPlatform = influencer.platforms.find(p => p.isMain)?.platform || influencer.platforms[0]?.platform;
   const relevantStats = statsSnapshots.filter(
-    s => s.platform === influencer.mainPlatform && s.avgViews !== null && s.avgViews > 0
+    s => s.platform === mainPlatform && s.avgViews !== null && s.avgViews > 0
   );
 
   if (relevantStats.length === 0) return 0;
 
   // Grouper par période
-  const statsByPeriod: Record<StatsPeriod, StatsSnapshot[]> = {
+  const statsByPeriod: Record<string, StatsSnapshot[]> = {
     LAST_15_DAYS: [],
     LAST_30_DAYS: [],
     LAST_3_MONTHS: [],
@@ -127,21 +128,21 @@ function computeOrganicPotentialScore(
   });
 
   // Calculer le score par période
-  const periodScores: { period: StatsPeriod; score: number; baseWeight: number }[] = [];
+  const periodScores: { period: string; score: number; baseWeight: number }[] = [];
 
   if (statsByPeriod.LAST_15_DAYS.length > 0) {
     const avgViews = statsByPeriod.LAST_15_DAYS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_15_DAYS.length;
-    periodScores.push({ period: 'LAST_15_DAYS', score: normalizeViews(avgViews), baseWeight: 0.5 });
+    periodScores.push({ period: 'LAST_15_DAYS' as string, score: normalizeViews(avgViews), baseWeight: 0.5 });
   }
 
   if (statsByPeriod.LAST_30_DAYS.length > 0) {
     const avgViews = statsByPeriod.LAST_30_DAYS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_30_DAYS.length;
-    periodScores.push({ period: 'LAST_30_DAYS', score: normalizeViews(avgViews), baseWeight: 0.3 });
+    periodScores.push({ period: 'LAST_30_DAYS' as string, score: normalizeViews(avgViews), baseWeight: 0.3 });
   }
 
   if (statsByPeriod.LAST_3_MONTHS.length > 0) {
     const avgViews = statsByPeriod.LAST_3_MONTHS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_3_MONTHS.length;
-    periodScores.push({ period: 'LAST_3_MONTHS', score: normalizeViews(avgViews), baseWeight: 0.2 });
+    periodScores.push({ period: 'LAST_3_MONTHS' as string, score: normalizeViews(avgViews), baseWeight: 0.2 });
   }
 
   if (periodScores.length === 0) return 0;
@@ -211,12 +212,8 @@ function computeROIEstimate(
   influencer: Influencer,
   collaborationStats: CollaborationStats[]
 ): { estimatedViews: number; estimatedCPV: number; roiScore: number } | null {
-  // Vérifier que budget futur existe
-  if (!influencer.budgetFutur || influencer.budgetFutur <= 0) {
-    return null;
-  }
-
-  // Calculer la moyenne des vues des collabs passées
+  // budgetFutur n'existe plus dans le modèle, retourner null
+  return null;
   const collabsWithViews = collaborationStats.filter(c => c.views !== null && c.views > 0);
   
   if (collabsWithViews.length === 0) {

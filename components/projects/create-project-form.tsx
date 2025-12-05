@@ -62,9 +62,9 @@ export function CreateProjectForm({ influencers }: { influencers: Influencer[] }
 
     setLoading(false);
 
-    if (result.success) {
+    if (result.success && result.project) {
       router.push(`/projects/${result.project.id}`);
-    } else {
+    } else if (!result.success) {
       alert(result.error);
     }
   };

@@ -31,7 +31,9 @@ export type UpdateProjectInput = Partial<CreateProjectInput> & {
 /**
  * Créer un nouveau projet
  */
-export async function createProject(input: CreateProjectInput) {
+export async function createProject(input: CreateProjectInput): Promise<
+  { success: true; project: any } | { success: false; error: string }
+> {
   try {
     const project = await prisma.project.create({
       data: {
