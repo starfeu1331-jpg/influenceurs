@@ -195,18 +195,21 @@ export function ComparisonForm({ influencers }: { influencers: Influencer[] }) {
                 <td className="p-3 font-semibold">Plateforme</td>
                 {comparisonData.map((inf: Influencer) => (
                   <td key={inf.id} className="text-center p-3">
-                    {inf.mainPlatform}
+                    {inf.platforms.find(p => p.isMain)?.platform || inf.platforms[0]?.platform || 'N/A'}
                   </td>
                 ))}
               </tr>
 
               <tr className="border-b border-gray-200">
                 <td className="p-3 font-semibold">Abonnés</td>
-                {comparisonData.map((inf: Influencer) => (
-                  <td key={inf.id} className="text-center p-3">
-                    {inf.followers?.toLocaleString() || 'N/A'}
-                  </td>
-                ))}
+                {comparisonData.map((inf: Influencer) => {
+                  const totalFollowers = inf.platforms.reduce((sum, p) => sum + (p.followers || 0), 0);
+                  return (
+                    <td key={inf.id} className="text-center p-3">
+                      {totalFollowers > 0 ? totalFollowers.toLocaleString() : 'N/A'}
+                    </td>
+                  );
+                })}
               </tr>
 
               <tr className="border-b border-gray-200 bg-gray-50">
