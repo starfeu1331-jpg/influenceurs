@@ -31,7 +31,8 @@ export type ComputedScore = {
     count: number;
     avgPrice: number;
     avgViews: number;
-    cpv: number;
+    cpm: number;
+    cpe: number;
     roiScore: number;
   }[];
   // Détail potentiel organique par format/plateforme
@@ -40,7 +41,8 @@ export type ComputedScore = {
     formatType: string;
     price: number;
     avgViews: number;
-    cpv: number;
+    cpm: number;
+    cpe: number;
     roiScore: number;
   }[];
 };
@@ -87,7 +89,8 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
     count: number;
     avgPrice: number;
     avgViews: number;
-    cpv: number;
+    cpm: number;
+    cpe: number;
     roiScore: number;
   }[];
 } {
@@ -126,14 +129,15 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
     }
     
     // Calculer ROI avec le module pricing
-    const roi = calculateROI(avgPrice, avgViews, avgLikes, avgComments);
+    const roi = calculateROI(avgPrice, avgViews, avgLikes, avgComments, format);
     
     return {
       format,
       count,
       avgPrice,
       avgViews,
-      cpv: roi.cpv,
+      cpm: roi.cpm,
+      cpe: roi.cpe,
       roiScore: roi.roiScore,
     };
   });
@@ -158,8 +162,8 @@ function computeOrganicPotentialScore(
     pricing: InfluencerPricing[];
   },
   statsSnapshots: StatsSnapshot[]
-): { score: number; breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpv: number; roiScore: number }> } {
-  const breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpv: number; roiScore: number }> = [];
+): { score: number; breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpm: number; cpe: number; roiScore: number }> } {
+  const breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpm: number; cpe: number; roiScore: number }> = [];
 
   // Si pas de tarifs définis, on ne peut pas calculer le potentiel
   if (!influencer.pricing || influencer.pricing.length === 0) {
@@ -214,14 +218,15 @@ function computeOrganicPotentialScore(
     const avgComments = recentStats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / recentStats.length;
 
     // Calculer le ROI pour ce format
-    const roi = calculateROI(pricing.price, avgViews, avgLikes, avgComments);
+    const roi = calculateROI(pricing.price, avgViews, avgLikes, avgComments, pricing.formatType);
 
     breakdown.push({
       platform,
       formatType: pricing.formatType,
       price: pricing.price,
       avgViews: Math.round(avgViews),
-      cpv: roi.cpv,
+      cpm: roi.cpm,
+      cpe: roi.cpe,
       roiScore: roi.roiScore,
     });
   });

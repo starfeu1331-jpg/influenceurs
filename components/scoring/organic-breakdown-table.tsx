@@ -5,7 +5,8 @@ type OrganicBreakdown = {
   formatType: string;
   price: number;
   avgViews: number;
-  cpv: number;
+  cpm: number;
+  cpe: number;
   roiScore: number;
 };
 
@@ -34,19 +35,17 @@ const FORMAT_LABELS: Record<string, string> = {
 };
 
 function getRoiColor(roiScore: number): string {
-  if (roiScore >= 80) return 'text-green-600 font-bold';
-  if (roiScore >= 60) return 'text-green-500';
-  if (roiScore >= 40) return 'text-orange-500';
-  if (roiScore >= 20) return 'text-orange-600';
+  if (roiScore >= 75) return 'text-green-600 font-bold';
+  if (roiScore >= 50) return 'text-green-500';
+  if (roiScore >= 25) return 'text-orange-500';
   return 'text-red-600';
 }
 
 function getRoiLabel(roiScore: number): string {
-  if (roiScore >= 80) return '🔥 Excellent';
-  if (roiScore >= 60) return '✅ Bon';
-  if (roiScore >= 40) return '⚠️ Moyen';
-  if (roiScore >= 20) return '❌ Faible';
-  return '🚫 Mauvais';
+  if (roiScore >= 75) return '⭐ Excellent';
+  if (roiScore >= 50) return '👍 Bon';
+  if (roiScore >= 25) return '😐 Moyen';
+  return '❌ Mauvais';
 }
 
 export default function OrganicBreakdownTable({ breakdown }: Props) {
@@ -81,7 +80,10 @@ export default function OrganicBreakdownTable({ breakdown }: Props) {
               Vues moy.
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              CPV
+              CPM
+            </th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              CPE
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Score ROI
@@ -108,7 +110,10 @@ export default function OrganicBreakdownTable({ breakdown }: Props) {
                 {item.avgViews.toLocaleString('fr-FR')}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-mono">
-                {item.cpv.toFixed(4)}€
+                {item.cpm.toFixed(2)}€
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-mono">
+                {item.cpe.toFixed(2)}€
               </td>
               <td className={`px-4 py-3 whitespace-nowrap text-sm text-right font-bold ${getRoiColor(item.roiScore)}`}>
                 {item.roiScore.toFixed(0)}/100
@@ -124,7 +129,7 @@ export default function OrganicBreakdownTable({ breakdown }: Props) {
       <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-sm text-blue-800">
           <strong>💡 Conseil :</strong> Privilégiez les formats avec les meilleurs scores ROI (vert). 
-          Un CPV bas = plus de visibilité pour moins cher.
+          CPM bas = bonne portée, CPE bas = bon engagement.
         </p>
       </div>
     </div>
