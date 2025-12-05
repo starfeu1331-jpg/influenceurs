@@ -27,6 +27,7 @@ export default async function HomePage() {
   
   const influencersWithScores = await prisma.influencer.findMany({
     include: {
+      platforms: true,
       scores: {
         orderBy: { computedAt: 'desc' },
         take: 1,
@@ -240,7 +241,9 @@ export default async function HomePage() {
                     <p className="font-semibold text-apple-gray-900 group-hover:text-apple-blue-600 transition-colors">
                       {inf.name}
                     </p>
-                    <p className="text-subhead text-apple-gray-600">{platformLabels[inf.mainPlatform]}</p>
+                    <p className="text-subhead text-apple-gray-600">
+                      {platformLabels[inf.platforms.find(p => p.isMain)?.platform || inf.platforms[0]?.platform || 'OTHER']}
+                    </p>
                   </div>
                 </div>
 
