@@ -223,10 +223,10 @@ export default async function InfluencerDetailPage({
       </div>
 
       {/* Potentiel organique par format - NOUVEAU */}
-      {latestGlobalScore && latestGlobalScore.organicBreakdown && latestGlobalScore.organicBreakdown.length > 0 && (
+      {latestGlobalScore && latestGlobalScore.organicBreakdown && Array.isArray(latestGlobalScore.organicBreakdown) && latestGlobalScore.organicBreakdown.length > 0 && (
         <div className="card-glass p-6 mb-6">
           <h2 className="text-xl font-bold mb-4">💎 Potentiel organique par format</h2>
-          <OrganicBreakdownTable breakdown={latestGlobalScore.organicBreakdown} />
+          <OrganicBreakdownTable breakdown={latestGlobalScore.organicBreakdown as any} />
         </div>
       )}
 
