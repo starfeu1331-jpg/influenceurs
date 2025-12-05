@@ -22,6 +22,8 @@ export type CreateProjectInput = {
   priority?: string;
   tags?: string;
   notes?: string;
+  nextActionDate?: Date;
+  reminderSet?: boolean;
 };
 
 export type UpdateProjectInput = Partial<CreateProjectInput> & {
