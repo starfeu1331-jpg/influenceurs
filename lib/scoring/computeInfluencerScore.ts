@@ -4,8 +4,8 @@ import { calculateROI, evaluateProfitability, BASE_PRICES, type ContentFormat } 
 
 export type InfluencerWithStats = {
   influencer: Influencer & { 
-    platforms: { platform: string; isMain: boolean; followers?: number }[];
-    pricing: InfluencerPricing[]; // NOUVEAU: inclure les tarifs
+    platforms: { platform: string; isMain: boolean; followers?: number | null }[];
+    pricing: InfluencerPricing[];
   };
   statsSnapshots: StatsSnapshot[];
   collaborationStats: CollaborationStats[];
