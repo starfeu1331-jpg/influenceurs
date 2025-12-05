@@ -32,6 +32,9 @@
     @apply antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Optimisations pour swipe natif fluide */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: none; /* Empêche bounce horizontal */
   }
 
   body {
@@ -44,6 +47,9 @@
     background-repeat: no-repeat;
     position: relative;
     min-height: 100vh;
+    /* Performance swipe */
+    overscroll-behavior-x: none;
+    touch-action: pan-y pinch-zoom; /* Autorise scroll vertical et zoom, bloque swipe navigateur */
   }
 
   body::before {
