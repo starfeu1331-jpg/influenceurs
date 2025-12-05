@@ -346,6 +346,36 @@ export default async function InfluencerDetailPage({
                 name="platform"
                 required
                 className="w-full border rounded px-3 py-2"
+                onChange={(e) => {
+                  const formatSelect = document.getElementById('formatType') as HTMLSelectElement;
+                  const platform = e.target.value;
+                  
+                  // Reset options
+                  formatSelect.innerHTML = '';
+                  
+                  if (platform === 'INSTAGRAM') {
+                    formatSelect.innerHTML = `
+                      <option value="REEL">📸 Reel</option>
+                      <option value="STORY">📱 Story</option>
+                      <option value="STORY_SET">📚 Story Set</option>
+                      <option value="POST_FEED">🖼️ Post Feed</option>
+                      <option value="POST_CARROUSEL">🎠 Carrousel</option>
+                    `;
+                  } else if (platform === 'TIKTOK') {
+                    formatSelect.innerHTML = `
+                      <option value="TIKTOK_VIDEO">🎵 TikTok Video</option>
+                      <option value="TIKTOK_SERIE">📺 TikTok Série</option>
+                    `;
+                  } else if (platform === 'YOUTUBE') {
+                    formatSelect.innerHTML = `
+                      <option value="YOUTUBE_VIDEO">▶️ YouTube Video</option>
+                      <option value="YOUTUBE_SHORT">⚡ YouTube Short</option>
+                      <option value="YOUTUBE_INTEGRATION">🔗 YouTube Intégration</option>
+                    `;
+                  } else {
+                    formatSelect.innerHTML = '<option value="OTHER">❓ Autre</option>';
+                  }
+                }}
               >
                 <option value="INSTAGRAM">Instagram</option>
                 <option value="TIKTOK">TikTok</option>
@@ -368,12 +398,6 @@ export default async function InfluencerDetailPage({
                 <option value="STORY_SET">📚 Story Set</option>
                 <option value="POST_FEED">🖼️ Post Feed</option>
                 <option value="POST_CARROUSEL">🎠 Carrousel</option>
-                <option value="TIKTOK_VIDEO">🎵 TikTok Video</option>
-                <option value="TIKTOK_SERIE">📺 TikTok Série</option>
-                <option value="YOUTUBE_VIDEO">▶️ YouTube Video</option>
-                <option value="YOUTUBE_SHORT">⚡ YouTube Short</option>
-                <option value="YOUTUBE_INTEGRATION">🔗 YouTube Intégration</option>
-                <option value="OTHER">❓ Autre</option>
               </select>
             </div>
             <div>
