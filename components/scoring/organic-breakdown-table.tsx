@@ -110,10 +110,10 @@ export default function OrganicBreakdownTable({ breakdown }: Props) {
                 {item.avgViews.toLocaleString('fr-FR')}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-mono">
-                {item.cpm.toFixed(2)}€
+                {item.cpm ? `${item.cpm.toFixed(2)}€` : '-'}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-mono">
-                {item.cpe.toFixed(2)}€
+                {item.cpe ? `${item.cpe.toFixed(2)}€` : '-'}
               </td>
               <td className={`px-4 py-3 whitespace-nowrap text-sm text-right font-bold ${getRoiColor(item.roiScore)}`}>
                 {item.roiScore.toFixed(0)}/100
@@ -129,7 +129,7 @@ export default function OrganicBreakdownTable({ breakdown }: Props) {
       <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-sm text-blue-800">
           <strong>💡 Conseil :</strong> Privilégiez les formats avec les meilleurs scores ROI (vert). 
-          CPM bas = bonne portée, CPE bas = bon engagement.
+          CPM bas = bonne portée, CPE bas = bon engagement. Si "-" affiché, recalculez le score.
         </p>
       </div>
     </div>
