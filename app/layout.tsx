@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HomeIcon, UserGroupIcon, CalendarIcon, ChartBarIcon, Squares2X2Icon, PlusIcon } from '@heroicons/react/24/outline'
-import NativeSwipeLayout from './native-swipe-page'
+import MobilePageSwipe from '@/components/mobile-page-swipe'
 
 export const metadata: Metadata = {
   title: 'CRM Influenceurs',
@@ -116,9 +116,9 @@ export default function RootLayout({
           {/* Main Content with top padding for fixed nav */}
           <main className="pt-16 md:pt-24 pb-12 md:pb-16">
             <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8">
-              <NativeSwipeLayout>
+              <MobilePageSwipe>
                 {children}
-              </NativeSwipeLayout>
+              </MobilePageSwipe>
             </div>
           </main>
         </div>

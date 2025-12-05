@@ -8,7 +8,7 @@ type Props = {
 
 export default function MobileSwipeContainer({ children }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const currentX = useRef(0);
@@ -27,13 +27,12 @@ export default function MobileSwipeContainer({ children }: Props) {
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isMobile) return;
     startX.current = e.touches[0].clientX;
     isDragging.current = true;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile || !isDragging.current) return;
+    if (!isDragging.current) return;
     currentX.current = e.touches[0].clientX;
     
     const diff = currentX.current - startX.current;
@@ -47,11 +46,11 @@ export default function MobileSwipeContainer({ children }: Props) {
   };
 
   const handleTouchEnd = () => {
-    if (!isMobile || !isDragging.current) return;
+    if (!isDragging.current) return;
     isDragging.current = false;
     
     const diff = currentX.current - startX.current;
-    const threshold = window.innerWidth * 0.2; // 20% de l'écran
+    const threshold = window.innerWidth * 0.2;
     
     let newIndex = currentIndex;
     
@@ -70,17 +69,14 @@ export default function MobileSwipeContainer({ children }: Props) {
     }
   };
 
-  // Bloquer le swipe souris sur desktop
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isMobile) {
-      e.preventDefault();
-      return;
-    }
-  };
+  // Pendant le chargement, afficher le premier enfant
+  if (isMobile === null) {
+    return <div className="space-y-4 md:space-y-8">{children}</div>;
+  }
 
-  // Desktop : affichage normal
+  // Desktop : affichage normal en scroll vertical
   if (!isMobile) {
-    return <>{children}</>;
+    return <div className="space-y-4 md:space-y-8">{children}</div>;
   }
 
   // Mobile : swipe horizontal
@@ -102,16 +98,14 @@ export default function MobileSwipeContainer({ children }: Props) {
       {/* Container swipeable */}
       <div
         ref={containerRef}
-        className="flex h-full"
+        className="flex h-full touch-pan-y"
         style={{
           transform: `translateX(-${currentIndex * 100}%)`,
           transition: 'transform 0.3s ease-out',
-          pointerEvents: 'auto',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
       >
         {children.map((child, idx) => (
           <div

@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import MobileSwipeContainer from '@/components/mobile-swipe-container';
 import { 
   UserGroupIcon, 
   ChartBarIcon, 
@@ -60,11 +59,9 @@ export default async function HomePage() {
   };
 
   return (
-    <MobileSwipeContainer>
-      {/* PAGE 1: Dashboard KPIs */}
-      <div className="space-y-4 md:space-y-8 animate-fade-in p-4">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden">
+    <div className="space-y-4 md:space-y-8 animate-fade-in p-4">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
           <div className="card-glass p-4 md:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1 md:space-y-2">
@@ -86,8 +83,8 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 gap-3 md:gap-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 gap-3 md:gap-6">
           <div className="card-glass p-4 md:p-6 hover-lift group">
             <div className="flex items-start justify-between mb-3 md:mb-4">
               <div className="p-2 md:p-3 bg-gradient-to-br from-apple-blue-500 to-apple-blue-600 rounded-apple shadow-apple">
@@ -153,17 +150,15 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* PAGE 2: Actions rapides */}
-      <div className="space-y-4 p-4">
-        <div className="card-glass p-4 md:p-8">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-gradient-to-br from-apple-blue-500 to-apple-purple-500 rounded-apple">
-              <Squares2X2Icon className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-title-1 font-semibold text-apple-gray-900">Actions rapides</h2>
+      {/* Actions rapides */}
+      <div className="card-glass p-4 md:p-8">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 bg-gradient-to-br from-apple-blue-500 to-apple-purple-500 rounded-apple">
+            <Squares2X2Icon className="w-5 h-5 text-white" />
           </div>
+          <h2 className="text-title-1 font-semibold text-apple-gray-900">Actions rapides</h2>
+        </div>
         
           <div className="grid grid-cols-2 gap-4">
             <Link
@@ -203,17 +198,15 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-      </div>
 
-      {/* PAGE 3: Top 5 Influencers */}
-      <div className="space-y-4 p-4">
-        <div className="card-glass p-8">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-apple">
-              <TrophyIcon className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-title-1 font-semibold text-apple-gray-900">Top 5 influenceurs</h2>
+      {/* Top 5 Influencers */}
+      <div className="card-glass p-8">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-apple">
+            <TrophyIcon className="w-5 h-5 text-white" />
           </div>
+          <h2 className="text-title-1 font-semibold text-apple-gray-900">Top 5 influenceurs</h2>
+        </div>
 
           {topInfluencers.length === 0 ? (
             <div className="text-center py-12">
@@ -259,25 +252,22 @@ export default async function HomePage() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* PAGE 4: Astuce */}
-      <div className="space-y-4 p-4">
-        <div className="glass rounded-apple-xl p-6 border border-apple-blue-200/50">
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0 p-3 bg-apple-blue-100 rounded-apple">
-              <SparklesIcon className="w-6 h-6 text-apple-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-apple-gray-900 mb-1">Astuce professionnelle</h3>
-              <p className="text-callout text-apple-gray-700">
-                Renseignez le <span className="font-semibold">budget futur</span> dans vos projets pour obtenir 
-                une estimation ROI automatique basée sur les performances historiques.
-              </p>
-            </div>
+      {/* Astuce */}
+      <div className="glass rounded-apple-xl p-6 border border-apple-blue-200/50">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0 p-3 bg-apple-blue-100 rounded-apple">
+            <SparklesIcon className="w-6 h-6 text-apple-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-apple-gray-900 mb-1">Astuce professionnelle</h3>
+            <p className="text-callout text-apple-gray-700">
+              Renseignez le <span className="font-semibold">budget futur</span> dans vos projets pour obtenir 
+              une estimation ROI automatique basée sur les performances historiques.
+            </p>
           </div>
         </div>
       </div>
-    </MobileSwipeContainer>
+    </div>
   );
 }
