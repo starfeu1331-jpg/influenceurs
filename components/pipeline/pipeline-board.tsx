@@ -14,7 +14,10 @@ type Status = {
 type Influencer = {
   id: string;
   name: string;
-  mainPlatform: string;
+  platforms?: {
+    platform: string;
+    isMain: boolean;
+  }[];
 };
 
 type Project = {
