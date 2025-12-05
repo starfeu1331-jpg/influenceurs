@@ -12,6 +12,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     include: {
       influencer: {
         include: {
+          platforms: true,
           scores: {
             orderBy: { computedAt: 'desc' },
             take: 1,
@@ -27,6 +28,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   }
 
   const latestScore = project.influencer.scores[0];
+  const totalFollowers = project.influencer.platforms.reduce((sum, p) => sum + (p.followers || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -61,10 +63,12 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
                 className="block hover:bg-gray-50 rounded-lg p-3 transition-colors"
               >
                 <div className="font-semibold text-blue-600">{project.influencer.name}</div>
-                <div className="text-sm text-gray-600 mt-1">{project.influencer.mainPlatform}</div>
-                {project.influencer.followers && (
+                <div className="text-sm text-gray-600 mt-1">
+                  {project.influencer.platforms.find(p => p.isMain)?.platform || project.influencer.platforms[0]?.platform || 'N/A'}
+                </div>
+                {totalFollowers > 0 && (
                   <div className="text-sm text-gray-600">
-                    {project.influencer.followers.toLocaleString()} abonnés
+                    {totalFollowers.toLocaleString()} abonnés
                   </div>
                 )}
                 {latestScore && (
