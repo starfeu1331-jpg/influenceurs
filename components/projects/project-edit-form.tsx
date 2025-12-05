@@ -134,19 +134,24 @@ export function ProjectEditForm({ project }: { project: Project }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Format</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Format 📊</label>
               <select
                 name="formatType"
                 defaultValue={project.formatType || ''}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">-- Sélectionner --</option>
-                <option value="REEL">Reel</option>
-                <option value="STORY">Story</option>
-                <option value="TIKTOK_VIDEO">Vidéo TikTok</option>
-                <option value="YOUTUBE_VIDEO">Vidéo YouTube</option>
-                <option value="POST">Post</option>
-                <option value="OTHER">Autre</option>
+                <option value="REEL">📸 Reel Instagram (800€)</option>
+                <option value="STORY">📱 Story Instagram (200€)</option>
+                <option value="STORY_SET">📲 Set de Stories (500€)</option>
+                <option value="POST_FEED">🖼️ Post Feed (600€)</option>
+                <option value="POST_CARROUSEL">🎠 Carrousel (700€)</option>
+                <option value="TIKTOK_VIDEO">🎵 Vidéo TikTok (600€)</option>
+                <option value="TIKTOK_SERIE">📹 Série TikTok (1500€)</option>
+                <option value="YOUTUBE_VIDEO">📺 Vidéo YouTube (2000€)</option>
+                <option value="YOUTUBE_SHORT">⚡ Short YouTube (500€)</option>
+                <option value="YOUTUBE_INTEGRATION">🎬 Intégration YouTube (1500€)</option>
+                <option value="OTHER">📄 Autre (500€)</option>
               </select>
             </div>
           </div>

@@ -477,21 +477,29 @@ export default async function InfluencerDetailPage({
             </div>
             <div>
               <label htmlFor="formatType" className="block text-sm font-medium text-gray-700 mb-1">
-                Format
+                Format 📊
               </label>
               <select
                 id="formatType"
                 name="formatType"
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 font-medium"
               >
-                <option value="REEL">Reel</option>
-                <option value="STORY">Story</option>
-                <option value="TIKTOK_VIDEO">Vidéo TikTok</option>
-                <option value="YOUTUBE_INTEGRATION">YouTube Intégration</option>
-                <option value="YOUTUBE_DEDICATED">YouTube Dédié</option>
-                <option value="OTHER">Autre</option>
+                <option value="REEL">📸 Reel Instagram (800€)</option>
+                <option value="STORY">📱 Story Instagram (200€)</option>
+                <option value="STORY_SET">📲 Set de Stories (500€)</option>
+                <option value="POST_FEED">🖼️ Post Feed (600€)</option>
+                <option value="POST_CARROUSEL">🎠 Carrousel (700€)</option>
+                <option value="TIKTOK_VIDEO">🎵 Vidéo TikTok (600€)</option>
+                <option value="TIKTOK_SERIE">📹 Série TikTok (1500€)</option>
+                <option value="YOUTUBE_VIDEO">📺 Vidéo YouTube (2000€)</option>
+                <option value="YOUTUBE_SHORT">⚡ Short YouTube (500€)</option>
+                <option value="YOUTUBE_INTEGRATION">🎬 Intégration YouTube (1500€)</option>
+                <option value="OTHER">📄 Autre (500€)</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tarifs de base × multiplicateur followers (0.5x à 3x)
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
@@ -533,7 +541,7 @@ export default async function InfluencerDetailPage({
             </div>
             <div>
               <label htmlFor="collabPrice" className="block text-sm font-medium text-gray-700 mb-1">
-                Prix (€)
+                Prix (€) 💰
               </label>
               <input
                 type="number"
@@ -541,8 +549,12 @@ export default async function InfluencerDetailPage({
                 name="price"
                 min="0"
                 step="0.01"
+                placeholder="Laisser vide = tarif auto"
                 className="w-full border rounded px-3 py-2"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                ℹ️ Si vide, prix calculé selon format + followers
+              </p>
             </div>
           </div>
           <div className="mb-3">
