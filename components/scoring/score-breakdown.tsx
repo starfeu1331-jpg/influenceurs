@@ -108,9 +108,16 @@ export function ScoreBreakdown({ score }: ScoreBreakdownProps) {
                   </div>
                   
                   <div className="bg-gray-50 rounded p-2">
-                    <div className="text-xs text-gray-500 mb-1">CPV</div>
+                    <div className="text-xs text-gray-500 mb-1">CPM</div>
                     <div className="font-semibold text-gray-800">
-                      {(format.cpv * 1000).toFixed(2)}¢
+                      {format.cpm.toFixed(2)}€
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded p-2">
+                    <div className="text-xs text-gray-500 mb-1">CPE</div>
+                    <div className="font-semibold text-gray-800">
+                      {format.cpe.toFixed(2)}€
                     </div>
                   </div>
                 </div>
