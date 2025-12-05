@@ -207,56 +207,12 @@ function computeStrategicFitScore(influencer: Influencer): number {
   return Math.min(avgScore, 100);
 }
 
-// 5. ROI prévisionnel (si budget futur renseigné)
+// 5. ROI prévisionnel (désactivé - budgetFutur supprimé du modèle)
 function computeROIEstimate(
   influencer: Influencer,
   collaborationStats: CollaborationStats[]
 ): { estimatedViews: number; estimatedCPV: number; roiScore: number } | null {
-  // budgetFutur n'existe plus dans le modèle, retourner null
   return null;
-  const collabsWithViews = collaborationStats.filter(c => c.views !== null && c.views > 0);
-  
-  if (collabsWithViews.length === 0) {
-    return null;
-  }
-
-  const avgViews = collabsWithViews.reduce((sum, c) => sum + (c.views || 0), 0) / collabsWithViews.length;
-  
-  // CPV estimé
-  const estimatedCPV = influencer.budgetFutur / avgViews;
-  
-  // Score ROI : comparer au CPV moyen des collabs passées
-  const collabsWithPrice = collaborationStats.filter(
-    c => c.price !== null && c.price > 0 && c.views !== null && c.views > 0
-  );
-
-  let roiScore = 50; // Score par défaut
-
-  if (collabsWithPrice.length > 0) {
-    const avgPastCPV = collabsWithPrice.reduce((sum, c) => sum + (c.price! / c.views!), 0) / collabsWithPrice.length;
-    
-    // Si CPV estimé meilleur (plus bas) que CPV passé → bon ROI
-    // Si CPV estimé pire (plus haut) que CPV passé → mauvais ROI
-    const ratio = estimatedCPV / avgPastCPV;
-    
-    if (ratio <= 0.8) {
-      roiScore = 90; // Excellent : 20% moins cher que d'habitude
-    } else if (ratio <= 1) {
-      roiScore = 75; // Bon : comparable ou légèrement mieux
-    } else if (ratio <= 1.2) {
-      roiScore = 60; // Acceptable : un peu plus cher
-    } else if (ratio <= 1.5) {
-      roiScore = 40; // Moyen : nettement plus cher
-    } else {
-      roiScore = 20; // Mauvais : beaucoup trop cher
-    }
-  }
-
-  return {
-    estimatedViews: Math.round(avgViews),
-    estimatedCPV: Math.round(estimatedCPV * 100000) / 100000,
-    roiScore: Math.round(roiScore),
-  };
 }
 
 // Fonction principale
