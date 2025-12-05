@@ -10,6 +10,7 @@ export async function recalculateScore(influencerId: string) {
     where: { id: influencerId },
     include: {
       platforms: true,
+      pricing: true, // INCLURE les tarifs
       statsSnapshots: true,
       collaborationStats: true,
       projects: {

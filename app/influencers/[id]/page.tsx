@@ -206,6 +206,17 @@ export default async function InfluencerDetailPage({
                 </div>
               </div>
             )}
+            <div>
+              <span className="text-gray-500">Tarifs définis</span>
+              <div className={`font-bold text-lg ${pricing.length > 0 ? 'text-green-600' : 'text-orange-500'}`}>
+                {pricing.length > 0 ? `${pricing.length} formats` : 'Aucun'}
+              </div>
+              {pricing.length === 0 && (
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ Définir les tarifs pour calculer le potentiel
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

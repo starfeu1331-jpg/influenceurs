@@ -1,9 +1,12 @@
-import { Influencer, StatsSnapshot, CollaborationStats } from "@prisma/client";
+import { Influencer, StatsSnapshot, CollaborationStats, InfluencerPricing } from "@prisma/client";
 import { Platform, StatsPeriod } from "@/lib/types";
 import { calculateROI, evaluateProfitability, BASE_PRICES, type ContentFormat } from "@/lib/pricing/pricing";
 
 export type InfluencerWithStats = {
-  influencer: Influencer & { platforms: { platform: string; isMain: boolean }[] };
+  influencer: Influencer & { 
+    platforms: { platform: string; isMain: boolean; followers?: number }[];
+    pricing: InfluencerPricing[]; // NOUVEAU: inclure les tarifs
+  };
   statsSnapshots: StatsSnapshot[];
   collaborationStats: CollaborationStats[];
 };
@@ -139,11 +142,19 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
   };
 }
 
-// 2. Potentiel organique (0-100)
+// 2. Potentiel organique (0-100) - Basé sur ROI potentiel (tarifs × stats organiques)
 function computeOrganicPotentialScore(
-  influencer: Influencer & { platforms: { platform: string; isMain: boolean }[] },
+  influencer: Influencer & { 
+    platforms: { platform: string; isMain: boolean; followers?: number }[];
+    pricing: InfluencerPricing[];
+  },
   statsSnapshots: StatsSnapshot[]
 ): number {
+  // Si pas de tarifs définis, on ne peut pas calculer le potentiel
+  if (!influencer.pricing || influencer.pricing.length === 0) {
+    return 0;
+  }
+
   // Filtrer sur la plateforme principale
   const mainPlatform = influencer.platforms.find(p => p.isMain)?.platform || influencer.platforms[0]?.platform;
   const relevantStats = statsSnapshots.filter(
@@ -152,7 +163,7 @@ function computeOrganicPotentialScore(
 
   if (relevantStats.length === 0) return 0;
 
-  // Grouper par période
+  // Calculer la moyenne des vues sur les périodes récentes (priorité aux plus récentes)
   const statsByPeriod: Record<string, StatsSnapshot[]> = {
     LAST_15_DAYS: [],
     LAST_30_DAYS: [],
@@ -160,48 +171,48 @@ function computeOrganicPotentialScore(
   };
 
   relevantStats.forEach(s => {
-    statsByPeriod[s.period].push(s);
+    if (statsByPeriod[s.period]) {
+      statsByPeriod[s.period].push(s);
+    }
   });
 
-  // Calculer le score par période
-  const periodScores: { period: string; score: number; baseWeight: number }[] = [];
+  // Prendre les stats les plus récentes disponibles
+  let avgViews = 0;
+  let avgLikes = 0;
+  let avgComments = 0;
 
   if (statsByPeriod.LAST_15_DAYS.length > 0) {
-    const avgViews = statsByPeriod.LAST_15_DAYS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_15_DAYS.length;
-    periodScores.push({ period: 'LAST_15_DAYS' as string, score: normalizeViews(avgViews), baseWeight: 0.5 });
+    const stats = statsByPeriod.LAST_15_DAYS;
+    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
+    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
+    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
+  } else if (statsByPeriod.LAST_30_DAYS.length > 0) {
+    const stats = statsByPeriod.LAST_30_DAYS;
+    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
+    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
+    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
+  } else if (statsByPeriod.LAST_3_MONTHS.length > 0) {
+    const stats = statsByPeriod.LAST_3_MONTHS;
+    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
+    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
+    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
   }
 
-  if (statsByPeriod.LAST_30_DAYS.length > 0) {
-    const avgViews = statsByPeriod.LAST_30_DAYS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_30_DAYS.length;
-    periodScores.push({ period: 'LAST_30_DAYS' as string, score: normalizeViews(avgViews), baseWeight: 0.3 });
-  }
+  if (avgViews === 0) return 0;
 
-  if (statsByPeriod.LAST_3_MONTHS.length > 0) {
-    const avgViews = statsByPeriod.LAST_3_MONTHS.reduce((sum, s) => sum + (s.avgViews || 0), 0) / statsByPeriod.LAST_3_MONTHS.length;
-    periodScores.push({ period: 'LAST_3_MONTHS' as string, score: normalizeViews(avgViews), baseWeight: 0.2 });
-  }
+  // Calculer le score ROI potentiel pour chaque format tarifé
+  const roiScores = influencer.pricing.map(pricing => {
+    // Calculer le ROI potentiel : prix / vues organiques
+    const roi = calculateROI(pricing.price, avgViews, avgLikes, avgComments);
+    return roi.roiScore;
+  });
 
-  if (periodScores.length === 0) return 0;
+  if (roiScores.length === 0) return 0;
 
-  // Recalculer les poids sur les périodes disponibles
-  const totalWeight = periodScores.reduce((sum, p) => sum + p.baseWeight, 0);
-  const normalizedScores = periodScores.map(p => ({
-    ...p,
-    weight: p.baseWeight / totalWeight,
-  }));
+  // Moyenne des scores ROI potentiels
+  const avgROIScore = roiScores.reduce((sum, s) => sum + s, 0) / roiScores.length;
 
-  // Score pondéré
-  let finalScore = normalizedScores.reduce((sum, p) => sum + p.score * p.weight, 0);
-
-  // Bonus si dynamique positive (15j > 3 mois)
-  const score15d = periodScores.find(p => p.period === 'LAST_15_DAYS');
-  const score3m = periodScores.find(p => p.period === 'LAST_3_MONTHS');
-  
-  if (score15d && score3m && score15d.score > score3m.score) {
-    finalScore = Math.min(finalScore + 5, 100);
-  }
-
-  return finalScore;
+  return Math.round(avgROIScore * 100) / 100;
 }
 
 // 3. Rentabilité (0-100) - Basé sur le CPV réel par format
@@ -291,7 +302,9 @@ export async function computeInfluencerScore(
 
   // Vérifier disponibilité de chaque bloc
   const impactAvailable = collaborationStats.some(c => c.views !== null && c.views > 0);
-  const organicAvailable = statsSnapshots.some(s => s.avgViews !== null && s.avgViews > 0);
+  const organicAvailable = 
+    statsSnapshots.some(s => s.avgViews !== null && s.avgViews > 0) &&
+    influencer.pricing && influencer.pricing.length > 0; // BESOIN des tarifs ET des stats
   const profitAvailable = collaborationStats.some(
     c => c.price !== null && c.price > 0 && c.views !== null && c.views > 0
   );
