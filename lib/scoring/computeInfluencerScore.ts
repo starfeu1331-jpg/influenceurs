@@ -1,6 +1,6 @@
 import { Influencer, StatsSnapshot, CollaborationStats, InfluencerPricing } from "@prisma/client";
 import { Platform, StatsPeriod } from "@/lib/types";
-import { calculateROI, evaluateProfitability, BASE_PRICES, type ContentFormat } from "@/lib/pricing/pricing";
+import { calculateROI, evaluateCPM, BASE_PRICES, type ContentFormat } from "@/lib/pricing/pricing";
 
 export type InfluencerWithStats = {
   influencer: Influencer & { 
@@ -262,13 +262,14 @@ function computeProfitabilityScore(collaborationStats: CollaborationStats[]): nu
 
   // Calculer le score par format
   const formatScores = Object.entries(byFormat).map(([format, stats]) => {
-    const cpvScores = stats.map(c => {
-      const cpv = c.price! / c.views!;
-      const { score } = evaluateProfitability(cpv);
-      return score;
+    const roiScores = stats.map(c => {
+      const avgLikes = c.likes || 0;
+      const avgComments = c.comments || 0;
+      const roi = calculateROI(c.price!, c.views!, avgLikes, avgComments, format);
+      return roi.roiScore;
     });
     
-    const avgScore = cpvScores.reduce((sum, s) => sum + s, 0) / cpvScores.length;
+    const avgScore = roiScores.reduce((sum, s) => sum + s, 0) / roiScores.length;
     return { format, score: avgScore, count: stats.length };
   });
 
