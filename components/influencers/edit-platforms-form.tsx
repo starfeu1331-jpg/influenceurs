@@ -6,7 +6,7 @@ import { updateInfluencerPlatforms } from '@/lib/actions/influencers';
 
 type Platform = {
   id: string;
-  platform: 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE' | 'OTHER';
+  platform: string; // Changed from union type to string for Prisma compatibility
   username: string | null;
   profileUrl: string | null;
   followers: number | null;
