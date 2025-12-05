@@ -70,6 +70,14 @@ export default function MobileSwipeContainer({ children }: Props) {
     }
   };
 
+  // Bloquer le swipe souris sur desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isMobile) {
+      e.preventDefault();
+      return;
+    }
+  };
+
   // Desktop : affichage normal
   if (!isMobile) {
     return <>{children}</>;
@@ -98,10 +106,12 @@ export default function MobileSwipeContainer({ children }: Props) {
         style={{
           transform: `translateX(-${currentIndex * 100}%)`,
           transition: 'transform 0.3s ease-out',
+          pointerEvents: 'auto',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
       >
         {children.map((child, idx) => (
           <div
