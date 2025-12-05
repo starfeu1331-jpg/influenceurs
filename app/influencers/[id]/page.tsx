@@ -621,7 +621,7 @@ export default async function InfluencerDetailPage({
                   {project.plannedStartDate && (
                     <span>📅 {new Date(project.plannedStartDate).toLocaleDateString('fr-FR')}</span>
                   )}
-                  {project.collaborationStats && (
+                  {project.projectCollaborationStats && (
                     <span className="text-green-600 font-medium">✓ Stats disponibles</span>
                   )}
                 </div>
