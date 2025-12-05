@@ -4,9 +4,11 @@ import { updateInfluencerFit } from '@/lib/actions/influencers';
 import { addStatsSnapshot, deleteStatsSnapshot } from '@/lib/actions/stats';
 import { addCollaborationStats, deleteCollaborationStats } from '@/lib/actions/collabs';
 import { recalculateScore } from '@/lib/actions/scores';
+import { getInfluencerPricing } from '@/lib/actions/pricing';
 import { EditPlatformsForm } from '@/components/influencers/edit-platforms-form';
 import { EditContactForm } from '@/components/influencers/edit-contact-form';
 import { DeleteInfluencerButton } from '@/components/influencers/delete-influencer-button';
+import EditPricingForm from '@/components/influencers/edit-pricing-form';
 import Link from 'next/link';
 
 const platformLabels: Record<string, string> = {
@@ -47,6 +49,9 @@ export default async function InfluencerDetailPage({
   if (!influencer) {
     notFound();
   }
+
+  // Récupérer les tarifs de l'influenceur
+  const pricing = await getInfluencerPricing(influencer.id);
 
   const latestGlobalScore = influencer.scores.find(s => !s.platform);
   const totalFollowers = influencer.platforms.reduce((sum, p) => sum + (p.followers || 0), 0);
@@ -128,10 +133,17 @@ export default async function InfluencerDetailPage({
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-700">Plateformes</h3>
-              <EditPlatformsForm 
-                influencerId={influencer.id} 
-                initialPlatforms={influencer.platforms}
-              />
+              <div className="flex gap-2">
+                <EditPricingForm 
+                  influencerId={influencer.id}
+                  existingPricing={pricing}
+                  followers={totalFollowers}
+                />
+                <EditPlatformsForm 
+                  influencerId={influencer.id} 
+                  initialPlatforms={influencer.platforms}
+                />
+              </div>
             </div>
             {influencer.platforms.length === 0 ? (
               <p className="text-sm text-gray-500 italic">Aucune plateforme configurée</p>

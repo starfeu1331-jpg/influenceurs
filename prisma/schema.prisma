@@ -32,6 +32,7 @@ model Influencer {
 
   // Relations
   platforms          InfluencerPlatform[] // NOUVEAU: plusieurs plateformes
+  pricing            InfluencerPricing[]  // NOUVEAU: tarifs par format
   statsSnapshots     StatsSnapshot[]
   collaborationStats CollaborationStats[]  // Pour le scoring (historique)
   scores             Score[]
@@ -61,6 +62,24 @@ model InfluencerPlatform {
   updatedAt    DateTime    @updatedAt
 
   @@unique([influencerId, platform]) // Un influenceur ne peut avoir qu'un profil par plateforme
+}
+
+// ============================================
+// NOUVEAU: Tarifs de l'influenceur par format
+// ============================================
+
+model InfluencerPricing {
+  id           String      @id @default(cuid())
+  influencer   Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId String
+  
+  formatType   String      // REEL, STORY, STORY_SET, TIKTOK_VIDEO, YOUTUBE_VIDEO, etc.
+  price        Float       // Prix en euros pour ce format
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([influencerId, formatType]) // Un seul prix par format par influenceur
 }
 
 model StatsSnapshot {
