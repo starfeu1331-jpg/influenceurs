@@ -1,0 +1,240 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// PARTIE 1: PROFILS INFLUENCEURS (Contact CRM)
+// ============================================
+
+model Influencer {
+  id           String   @id @default(cuid())
+  name         String
+  location     String?
+  email        String?
+  phone        String?
+  notes        String?
+
+  // Fit / cible / temporalité (saisis à la main)
+  topicsNotes        String?
+  audienceNotes      String?
+  projectTimeline    String?
+  fitThemeScore      Int?
+  fitGeoScore        Int?
+  fitTimingScore     Int?
+
+  // Relations
+  platforms          InfluencerPlatform[] // NOUVEAU: plusieurs plateformes
+  statsSnapshots     StatsSnapshot[]
+  collaborationStats CollaborationStats[]  // Pour le scoring (historique)
+  scores             Score[]
+  projects           Project[]        // TOUS les projets liés à cet influenceur
+  comparisonItems    ComparisonItem[] // Pour le comparateur
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================================
+// NOUVEAU: Plateformes de l'influenceur
+// ============================================
+
+model InfluencerPlatform {
+  id           String      @id @default(cuid())
+  influencer   Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId String
+  
+  platform     String      // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  profileUrl   String?     // URL du profil sur cette plateforme
+  followers    Int?        // Nombre d'abonnés sur cette plateforme
+  username     String?     // Handle/username sur cette plateforme
+  isMain       Boolean     @default(false) // Plateforme principale?
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([influencerId, platform]) // Un influenceur ne peut avoir qu'un profil par plateforme
+}
+
+model StatsSnapshot {
+  id           String   @id @default(cuid())
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId String
+
+  platform     String   // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  period       String   // LAST_15_DAYS, LAST_30_DAYS, LAST_3_MONTHS
+  avgViews     Int?
+  avgLikes     Int?
+  avgComments  Int?
+
+  createdAt    DateTime @default(now())
+}
+
+model Score {
+  id                      String   @id @default(cuid())
+  influencer              Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId            String
+
+  platform                String?  // NOUVEAU: Score par plateforme (null = score global tous réseaux)
+
+  totalScore              Float
+
+  impactCollabsScore      Float
+  organicPotentialScore   Float
+  profitabilityScore      Float
+  strategicFitScore       Float
+
+  weightImpactCollabs     Float
+  weightOrganicPotential  Float
+  weightProfitability     Float
+  weightStrategicFit      Float
+
+  // ROI prévisionnel basé sur les stats du projet associé
+  estimatedViews          Int?     // Vues estimées si collab future
+  estimatedCPV            Float?   // CPV estimé
+  roiScore                Float?   // Score de ROI (0-100)
+
+  computedAt              DateTime @default(now())
+}
+
+// ============================================
+// PARTIE 2: PROJETS / CAMPAGNES (Pipeline CRM)
+// ============================================
+// Statuts: PROPOSE, PROSPECTION, PREMIER_CONTACT, NEGOCIATION, PROPOSITION, ACCORD, EN_COURS, TERMINE, REFUSE, A_RECONTACTER
+
+model Project {
+  id                 String        @id @default(cuid())
+  name               String        // Ex: "Collab Noël 2025 - Siham"
+  description        String?
+  status             String        @default("PROPOSE") // ProjectStatus as String for SQLite
+  
+  // Relation avec l'influenceur
+  influencer         Influencer    @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId       String
+
+  // Origine de la proposition
+  proposedBy         String?       // "Charline - Agent Pierre & Phill", "Christine - Dir Magasin M49", etc.
+  proposedDate       DateTime?     // Date de proposition
+
+  // Dates et planning
+  plannedStartDate   DateTime?     // Date prévue de début
+  plannedEndDate     DateTime?     // Date prévue de fin
+  actualStartDate    DateTime?     // Date réelle de début
+  actualEndDate      DateTime?     // Date réelle de fin
+  
+  // Budget et prévisions
+  budgetAlloue       Float?        // Budget alloué au projet
+  platform           String?       // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  formatType         String?       // REEL, STORY, TIKTOK_VIDEO, etc.
+  
+  // Métriques PRÉDITES (avant collaboration)
+  predictedViews     Int?
+  predictedLikes     Int?
+  predictedComments  Int?
+  predictedCPV       Float?
+
+  // Collaboration réelle (rempli après)
+  projectCollaborationStats ProjectCollaborationStats?
+
+  // Suivi et notes
+  notes              String?
+  lastContactDate    DateTime?     // Dernière interaction
+  nextActionDate     DateTime?     // Prochaine action prévue
+  reminderSet        Boolean       @default(false)
+
+  // Métadonnées
+  priority           String?       @default("MEDIUM") // HIGH, MEDIUM, LOW
+  tags               String?       // Tags séparés par virgules
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+// ============================================
+// PARTIE 3A: STATS HISTORIQUES (Pour Scoring)
+// ============================================
+
+model CollaborationStats {
+  id           String   @id @default(cuid())
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId String
+
+  title        String?
+  date         DateTime?
+  platform     String   // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  formatType   String   // REEL, STORY, TIKTOK_VIDEO, etc.
+  views        Int?
+  likes        Int?
+  comments     Int?
+  price        Float?
+  isCollab     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+}
+
+// ============================================
+// PARTIE 3B: RÉSULTATS PROJET (Pour Tracker CRM)
+// ============================================
+
+model ProjectCollaborationStats {
+  id           String   @id @default(cuid())
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String   @unique
+
+  title        String?
+  platform     String   // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  formatType   String   // REEL, STORY, TIKTOK_VIDEO, etc.
+  publishDate  DateTime?
+
+  // Métriques RÉELLES
+  actualViews     Int?
+  actualLikes     Int?
+  actualComments  Int?
+  actualPrice     Float?   // Prix payé réel
+  actualCPV       Float?   // CPV réel (calculé)
+
+  // Analyse d'écart (vs prédictions du projet)
+  viewsVariance      Float?   // % d'écart
+  likesVariance      Float?
+  commentsVariance   Float?
+  cpvVariance        Float?
+
+  // Recommandation finale
+  performanceRating  String?  // EXCELLENT, BON, MOYEN, DECEVANT
+  recommendRecollab  Boolean? // Recommander une nouvelle collab?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================================
+// PARTIE 4: COMPARATEUR
+// ============================================
+
+model Comparison {
+  id          String           @id @default(cuid())
+  name        String           // "Comparaison pour Noël 2025"
+  description String?
+  items       ComparisonItem[]
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model ComparisonItem {
+  id            String      @id @default(cuid())
+  comparison    Comparison  @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  comparisonId  String
+  
+  influencer    Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  influencerId  String
+
+  addedAt       DateTime    @default(now())
+}
