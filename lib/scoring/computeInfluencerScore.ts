@@ -2,7 +2,7 @@ import { Influencer, StatsSnapshot, CollaborationStats } from "@prisma/client";
 import { Platform, StatsPeriod } from "@/lib/types";
 
 export type InfluencerWithStats = {
-  influencer: Influencer;
+  influencer: Influencer & { platforms: { platform: string; isMain: boolean }[] };
   statsSnapshots: StatsSnapshot[];
   collaborationStats: CollaborationStats[];
 };
