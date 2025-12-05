@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Jore Jardin (Harold)",
+    "platforms": [
+      {
+        "platform": "TIKTOK",
+        "followers": 880000,
+        "isMain": true
+      }
+    ]
+  },
+  {
+    "name": "Aurelia (Villa Mahana Cassis)",
+    "platforms": [
+      {
+        "platform": "INSTAGRAM",
+        "followers": 14000000,
+        "isMain": true
+      },
+      {
+        "platform": "TIKTOK",
+        "followers": 336000,
+        "isMain": false
+      }
+    ]
+  },
+  {
+    "name": "Benjamin",
+    "platforms": [
+      {
+        "platform": "INSTAGRAM",
+        "followers": 34401,
+        "isMain": true
+      },
+      {
+        "platform": "YOUTUBE",
+        "followers": 20418720,
+        "isMain": false
+      }
+    ]
+  },
+  {
+    "name": "Marie Lys (Bricomont)",
+    "platforms": [
+      {
+        "platform": "TIKTOK",
+        "followers": 93000,
+        "isMain": true
+      }
+    ]
+  },
+  {
+    "name": "Marc & Sandy",
+    "platforms": [
+      {
+        "platform": "YOUTUBE",
+        "followers": 20000205,
+        "isMain": true
+      }
+    ]
+  },
+  {
+    "name": "Aladdin",
+    "platforms": [
+      {
+        "platform": "YOUTUBE",
+        "followers": 18195026,
+        "isMain": true
+      }
+    ]
+  },
+  {
+    "name": "Charley et Charlotte",
+    "platforms": [
+      {
+        "platform": "YOUTUBE",
+        "followers": 527908,
+        "isMain": true
+      }
+    ]
+  },
+  {
+    "name": "Ted & Lisa",
+    "platforms": [
+      {
+        "platform": "INSTAGRAM",
+        "followers": 187008466,
+        "isMain": true
+      }
+    ]
+  }
+]

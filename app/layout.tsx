@@ -2,10 +2,29 @@ import './globals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HomeIcon, UserGroupIcon, CalendarIcon, ChartBarIcon, Squares2X2Icon, PlusIcon } from '@heroicons/react/24/outline'
+import SwipeableLayout from '@/components/SwipeableLayout'
 
 export const metadata: Metadata = {
   title: 'CRM Influenceurs',
   description: 'Gestion professionnelle de campagnes influenceurs',
+  manifest: '/manifest.json',
+  themeColor: '#007AFF',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'D2D CRM',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -15,6 +34,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="smooth-scroll">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="D2D CRM" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body>
         <div className="min-h-screen">
           {/* Glass Navigation */}
@@ -89,7 +116,9 @@ export default function RootLayout({
           {/* Main Content with top padding for fixed nav */}
           <main className="pt-16 md:pt-24 pb-12 md:pb-16">
             <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8">
-              {children}
+              <SwipeableLayout>
+                {children}
+              </SwipeableLayout>
             </div>
           </main>
         </div>
