@@ -63,7 +63,8 @@ export default async function InfluencerDetailPage({
           ← Retour à la liste
         </Link>
         <h1 className="text-3xl font-bold mb-4">{influencer.name}</h1>
-          
+        
+        <div>
           {/* Plateformes */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
