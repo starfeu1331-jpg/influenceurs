@@ -170,6 +170,7 @@ export async function analyzeAndRecommend(influencerIds: string[]): Promise<{
         id: { in: influencerIds },
       },
       include: {
+        platforms: true,
         scores: {
           orderBy: { computedAt: 'desc' },
           take: 1,

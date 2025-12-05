@@ -9,6 +9,7 @@ export async function recalculateScore(influencerId: string) {
   const influencer = await prisma.influencer.findUnique({
     where: { id: influencerId },
     include: {
+      platforms: true,
       statsSnapshots: true,
       collaborationStats: true,
       projects: {
