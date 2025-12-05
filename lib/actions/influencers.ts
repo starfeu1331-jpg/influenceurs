@@ -158,3 +158,34 @@ export async function updateInfluencerFit(influencerId: string, formData: FormDa
 
   revalidatePath(`/influencers/${influencerId}`);
 }
+
+export async function updateInfluencerContact(formData: FormData) {
+  const influencerId = formData.get('influencerId') as string;
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string | null;
+  const phone = formData.get('phone') as string | null;
+  const location = formData.get('location') as string | null;
+  const notes = formData.get('notes') as string | null;
+
+  await prisma.influencer.update({
+    where: { id: influencerId },
+    data: {
+      name,
+      email: email || null,
+      phone: phone || null,
+      location: location || null,
+      notes: notes || null,
+    },
+  });
+
+  revalidatePath(`/influencers/${influencerId}`);
+  revalidatePath('/influencers');
+}
+
+export async function deleteInfluencer(influencerId: string) {
+  await prisma.influencer.delete({
+    where: { id: influencerId },
+  });
+
+  revalidatePath('/influencers');
+}

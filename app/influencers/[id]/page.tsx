@@ -5,6 +5,8 @@ import { addStatsSnapshot, deleteStatsSnapshot } from '@/lib/actions/stats';
 import { addCollaborationStats, deleteCollaborationStats } from '@/lib/actions/collabs';
 import { recalculateScore } from '@/lib/actions/scores';
 import { EditPlatformsForm } from '@/components/influencers/edit-platforms-form';
+import { EditContactForm } from '@/components/influencers/edit-contact-form';
+import { DeleteInfluencerButton } from '@/components/influencers/delete-influencer-button';
 import Link from 'next/link';
 
 const platformLabels: Record<string, string> = {
@@ -59,12 +61,69 @@ export default async function InfluencerDetailPage({
     <div className="space-y-6">
       {/* Header */}
       <div className="card-glass p-6">
-        <Link href="/influencers" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
-          ← Retour à la liste
-        </Link>
-        <h1 className="text-3xl font-bold mb-4">{influencer.name}</h1>
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/influencers" className="text-blue-600 hover:text-blue-800">
+            ← Retour à la liste
+          </Link>
+          <DeleteInfluencerButton 
+            influencerId={influencer.id}
+            influencerName={influencer.name}
+          />
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-6">{influencer.name}</h1>
         
         <div>
+          {/* Infos de contact */}
+          <div className="mb-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700">📞 Informations de contact</h3>
+              <EditContactForm 
+                influencerId={influencer.id}
+                initialContact={{
+                  name: influencer.name,
+                  email: influencer.email,
+                  phone: influencer.phone,
+                  location: influencer.location,
+                  notes: influencer.notes,
+                }}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              {influencer.email && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500">📧</span>
+                  <a href={`mailto:${influencer.email}`} className="text-blue-600 hover:underline">
+                    {influencer.email}
+                  </a>
+                </div>
+              )}
+              {influencer.phone && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500">📱</span>
+                  <a href={`tel:${influencer.phone}`} className="text-blue-600 hover:underline">
+                    {influencer.phone}
+                  </a>
+                </div>
+              )}
+              {influencer.location && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500">📍</span>
+                  <span>{influencer.location}</span>
+                </div>
+              )}
+              {!influencer.email && !influencer.phone && !influencer.location && (
+                <p className="text-sm text-gray-500 italic col-span-2">Aucune information de contact</p>
+              )}
+            </div>
+            {influencer.notes && (
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <span className="text-xs font-medium text-gray-500">Notes :</span>
+                <p className="text-sm text-gray-700 mt-1">{influencer.notes}</p>
+              </div>
+            )}
+          </div>
+
           {/* Plateformes */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -127,12 +186,6 @@ export default async function InfluencerDetailPage({
                 {totalFollowers.toLocaleString('fr-FR')}
               </div>
             </div>
-            {influencer.location && (
-              <div>
-                <span className="text-gray-500">Localisation</span>
-                <div className="font-medium">{influencer.location}</div>
-              </div>
-            )}
             {latestGlobalScore && (
               <div>
                 <span className="text-gray-500">Score Global</span>
@@ -142,12 +195,6 @@ export default async function InfluencerDetailPage({
               </div>
             )}
           </div>
-          {influencer.notes && (
-            <div className="mt-4 p-3 bg-gray-50 rounded">
-              <span className="text-sm text-gray-500">Notes : </span>
-              <span className="text-sm">{influencer.notes}</span>
-            </div>
-          )}
         </div>
       </div>
 
