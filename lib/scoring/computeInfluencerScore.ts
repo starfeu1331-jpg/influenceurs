@@ -1,5 +1,6 @@
 import { Influencer, StatsSnapshot, CollaborationStats } from "@prisma/client";
 import { Platform, StatsPeriod } from "@/lib/types";
+import { calculateROI, evaluateProfitability, BASE_PRICES, type ContentFormat } from "@/lib/pricing/pricing";
 
 export type InfluencerWithStats = {
   influencer: Influencer & { platforms: { platform: string; isMain: boolean }[] };
@@ -21,6 +22,15 @@ export type ComputedScore = {
   estimatedViews?: number;
   estimatedCPV?: number;
   roiScore?: number;
+  // Détail par format
+  formatBreakdown?: {
+    format: string;
+    count: number;
+    avgPrice: number;
+    avgViews: number;
+    cpv: number;
+    roiScore: number;
+  }[];
 };
 
 // Normalisation des vues (0-100)
@@ -57,50 +67,76 @@ function scoreFromCPV(cpv: number): number {
   return Math.max(0, Math.min(100, 100 * (1 - ratio)));
 }
 
-// 1. Impact collabs (0-100)
-function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): number {
+// 1. Impact collabs (0-100) - Basé sur le ROI réel par format
+function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
+  score: number;
+  breakdown: {
+    format: string;
+    count: number;
+    avgPrice: number;
+    avgViews: number;
+    cpv: number;
+    roiScore: number;
+  }[];
+} {
   const collabsWithViews = collaborationStats.filter(c => c.views !== null && c.views > 0);
   
-  if (collabsWithViews.length === 0) return 0;
-
-  // Calculer les moyennes
-  const avgViews = collabsWithViews.reduce((sum, c) => sum + (c.views || 0), 0) / collabsWithViews.length;
-  
-  const collabsWithLikes = collabsWithViews.filter(c => c.likes !== null && c.likes > 0);
-  const avgLikes = collabsWithLikes.length > 0
-    ? collabsWithLikes.reduce((sum, c) => sum + (c.likes || 0), 0) / collabsWithLikes.length
-    : 0;
-  
-  const collabsWithComments = collabsWithViews.filter(c => c.comments !== null && c.comments > 0);
-  const avgComments = collabsWithComments.length > 0
-    ? collabsWithComments.reduce((sum, c) => sum + (c.comments || 0), 0) / collabsWithComments.length
-    : 0;
-
-  // Normaliser chaque métrique
-  const viewsScore = normalizeViews(avgViews);
-  const likesScore = normalizeLikes(avgLikes);
-  const commentsScore = normalizeComments(avgComments);
-
-  // Pondération : 70% vues, 20% likes, 10% comments
-  let totalWeight = 0.7; // vues toujours présentes
-  let score = viewsScore * 0.7;
-
-  if (collabsWithLikes.length > 0) {
-    totalWeight += 0.2;
-    score += likesScore * 0.2;
+  if (collabsWithViews.length === 0) {
+    return { score: 0, breakdown: [] };
   }
 
-  if (collabsWithComments.length > 0) {
-    totalWeight += 0.1;
-    score += commentsScore * 0.1;
-  }
+  // Grouper par format
+  const byFormat: Record<string, CollaborationStats[]> = {};
+  collabsWithViews.forEach(c => {
+    const format = c.formatType || 'OTHER';
+    if (!byFormat[format]) byFormat[format] = [];
+    byFormat[format].push(c);
+  });
 
-  // Si pas de likes ou comments, redistribuer le poids
-  if (totalWeight < 1) {
-    score = score / totalWeight;
-  }
+  // Calculer le score par format
+  const breakdown = Object.entries(byFormat).map(([format, stats]) => {
+    const count = stats.length;
+    
+    // Calculer moyennes
+    const avgViews = stats.reduce((sum, s) => sum + (s.views || 0), 0) / count;
+    const avgLikes = stats.reduce((sum, s) => sum + (s.likes || 0), 0) / count;
+    const avgComments = stats.reduce((sum, s) => sum + (s.comments || 0), 0) / count;
+    
+    // Calculer prix moyen (ou utiliser prix de référence)
+    const statsWithPrice = stats.filter(s => s.price && s.price > 0);
+    let avgPrice: number;
+    
+    if (statsWithPrice.length > 0) {
+      avgPrice = statsWithPrice.reduce((sum, s) => sum + (s.price || 0), 0) / statsWithPrice.length;
+    } else {
+      // Utiliser prix de référence si pas de prix renseigné
+      avgPrice = BASE_PRICES[format as ContentFormat] || BASE_PRICES.OTHER;
+    }
+    
+    // Calculer ROI avec le module pricing
+    const roi = calculateROI(avgPrice, avgViews, avgLikes, avgComments);
+    
+    return {
+      format,
+      count,
+      avgPrice,
+      avgViews,
+      cpv: roi.cpv,
+      roiScore: roi.roiScore,
+    };
+  });
 
-  return Math.min(score, 100);
+  // Score global = moyenne pondérée par nombre de collabs
+  const totalCollabs = breakdown.reduce((sum, b) => sum + b.count, 0);
+  const weightedScore = breakdown.reduce((sum, b) => {
+    const weight = b.count / totalCollabs;
+    return sum + (b.roiScore * weight);
+  }, 0);
+
+  return {
+    score: Math.round(weightedScore * 100) / 100,
+    breakdown,
+  };
 }
 
 // 2. Potentiel organique (0-100)
@@ -168,7 +204,7 @@ function computeOrganicPotentialScore(
   return finalScore;
 }
 
-// 3. Rentabilité (0-100)
+// 3. Rentabilité (0-100) - Basé sur le CPV réel par format
 function computeProfitabilityScore(collaborationStats: CollaborationStats[]): number {
   const collabsWithPriceAndViews = collaborationStats.filter(
     c => c.price !== null && c.price > 0 && c.views !== null && c.views > 0
@@ -176,15 +212,34 @@ function computeProfitabilityScore(collaborationStats: CollaborationStats[]): nu
 
   if (collabsWithPriceAndViews.length === 0) return 0;
 
-  // Calculer le CPV de chaque collab
-  const cpvScores = collabsWithPriceAndViews.map(c => {
-    const cpv = c.price! / c.views!;
-    return scoreFromCPV(cpv);
+  // Grouper par format
+  const byFormat: Record<string, CollaborationStats[]> = {};
+  collabsWithPriceAndViews.forEach(c => {
+    const format = c.formatType || 'OTHER';
+    if (!byFormat[format]) byFormat[format] = [];
+    byFormat[format].push(c);
   });
 
-  // Moyenne des scores
-  const avgScore = cpvScores.reduce((sum, s) => sum + s, 0) / cpvScores.length;
-  return avgScore;
+  // Calculer le score par format
+  const formatScores = Object.entries(byFormat).map(([format, stats]) => {
+    const cpvScores = stats.map(c => {
+      const cpv = c.price! / c.views!;
+      const { score } = evaluateProfitability(cpv);
+      return score;
+    });
+    
+    const avgScore = cpvScores.reduce((sum, s) => sum + s, 0) / cpvScores.length;
+    return { format, score: avgScore, count: stats.length };
+  });
+
+  // Moyenne pondérée par nombre de collabs
+  const totalCollabs = formatScores.reduce((sum, f) => sum + f.count, 0);
+  const weightedScore = formatScores.reduce((sum, f) => {
+    const weight = f.count / totalCollabs;
+    return sum + (f.score * weight);
+  }, 0);
+
+  return Math.round(weightedScore * 100) / 100;
 }
 
 // 4. Fit stratégique (0-100)
@@ -222,7 +277,8 @@ export async function computeInfluencerScore(
   const { influencer, statsSnapshots, collaborationStats } = data;
 
   // Calculer chaque sous-score
-  const impactCollabsScore = computeImpactCollabsScore(collaborationStats);
+  const impactResult = computeImpactCollabsScore(collaborationStats);
+  const impactCollabsScore = impactResult.score;
   const organicPotentialScore = computeOrganicPotentialScore(influencer, statsSnapshots);
   const profitabilityScore = computeProfitabilityScore(collaborationStats);
   const strategicFitScore = computeStrategicFitScore(influencer);
@@ -263,6 +319,7 @@ export async function computeInfluencerScore(
       weightOrganicPotential: 0,
       weightProfitability: 0,
       weightStrategicFit: 0,
+      formatBreakdown: [],
     };
   }
 
@@ -295,5 +352,6 @@ export async function computeInfluencerScore(
     estimatedViews: roiEstimate?.estimatedViews,
     estimatedCPV: roiEstimate?.estimatedCPV,
     roiScore: roiEstimate?.roiScore,
+    formatBreakdown: impactResult.breakdown,
   };
 }
