@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function addStatsSnapshot(influencerId: string, formData: FormData) {
   const platform = formData.get('platform') as string;
+  const formatType = formData.get('formatType') as string;
   const period = formData.get('period') as string;
   const avgViewsStr = formData.get('avgViews') as string | null;
   const avgLikesStr = formData.get('avgLikes') as string | null;
@@ -18,6 +19,7 @@ export async function addStatsSnapshot(influencerId: string, formData: FormData)
     data: {
       influencerId,
       platform,
+      formatType,
       period,
       avgViews,
       avgLikes,

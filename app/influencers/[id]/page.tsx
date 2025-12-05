@@ -9,6 +9,7 @@ import { EditPlatformsForm } from '@/components/influencers/edit-platforms-form'
 import { EditContactForm } from '@/components/influencers/edit-contact-form';
 import { DeleteInfluencerButton } from '@/components/influencers/delete-influencer-button';
 import EditPricingForm from '@/components/influencers/edit-pricing-form';
+import OrganicBreakdownTable from '@/components/scoring/organic-breakdown-table';
 import Link from 'next/link';
 
 const platformLabels: Record<string, string> = {
@@ -221,6 +222,14 @@ export default async function InfluencerDetailPage({
         </div>
       </div>
 
+      {/* Potentiel organique par format - NOUVEAU */}
+      {latestGlobalScore && latestGlobalScore.organicBreakdown && latestGlobalScore.organicBreakdown.length > 0 && (
+        <div className="card-glass p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4">💎 Potentiel organique par format</h2>
+          <OrganicBreakdownTable breakdown={latestGlobalScore.organicBreakdown} />
+        </div>
+      )}
+
       {/* Fit & cible */}
       <div className="card-glass p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Fit & Cible</h2>
@@ -327,7 +336,7 @@ export default async function InfluencerDetailPage({
         
         <form action={addStatsSnapshot.bind(null, influencer.id)} className="mb-6 p-4 bg-gray-50 rounded">
           <h3 className="font-medium mb-3">Ajouter un snapshot</h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
             <div>
               <label htmlFor="platform" className="block text-sm font-medium text-gray-700 mb-1">
                 Plateforme
@@ -342,6 +351,29 @@ export default async function InfluencerDetailPage({
                 <option value="TIKTOK">TikTok</option>
                 <option value="YOUTUBE">YouTube</option>
                 <option value="OTHER">Autre</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="formatType" className="block text-sm font-medium text-gray-700 mb-1">
+                Format
+              </label>
+              <select
+                id="formatType"
+                name="formatType"
+                required
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="REEL">📸 Reel</option>
+                <option value="STORY">📱 Story</option>
+                <option value="STORY_SET">📚 Story Set</option>
+                <option value="POST_FEED">🖼️ Post Feed</option>
+                <option value="POST_CARROUSEL">🎠 Carrousel</option>
+                <option value="TIKTOK_VIDEO">🎵 TikTok Video</option>
+                <option value="TIKTOK_SERIE">📺 TikTok Série</option>
+                <option value="YOUTUBE_VIDEO">▶️ YouTube Video</option>
+                <option value="YOUTUBE_SHORT">⚡ YouTube Short</option>
+                <option value="YOUTUBE_INTEGRATION">🔗 YouTube Intégration</option>
+                <option value="OTHER">❓ Autre</option>
               </select>
             </div>
             <div>
@@ -412,6 +444,7 @@ export default async function InfluencerDetailPage({
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Plateforme</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Format</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Période</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Vues moy.</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Likes moy.</th>
@@ -423,6 +456,7 @@ export default async function InfluencerDetailPage({
                 {influencer.statsSnapshots.map((snapshot) => (
                   <tr key={snapshot.id}>
                     <td className="px-4 py-2 text-sm">{platformLabels[snapshot.platform]}</td>
+                    <td className="px-4 py-2 text-sm font-medium">{snapshot.formatType}</td>
                     <td className="px-4 py-2 text-sm">
                       {snapshot.period === 'LAST_15_DAYS' && '15j'}
                       {snapshot.period === 'LAST_30_DAYS' && '30j'}

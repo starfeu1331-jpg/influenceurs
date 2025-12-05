@@ -88,12 +88,15 @@ model StatsSnapshot {
   influencerId String
 
   platform     String   // INSTAGRAM, TIKTOK, YOUTUBE, OTHER
+  formatType   String   @default("UNKNOWN") // REEL, STORY, TIKTOK_VIDEO, YOUTUBE_SHORT, etc.
   period       String   // LAST_15_DAYS, LAST_30_DAYS, LAST_3_MONTHS
   avgViews     Int?
   avgLikes     Int?
   avgComments  Int?
 
   createdAt    DateTime @default(now())
+
+  @@unique([influencerId, platform, formatType, period]) // Une seule stat par influenceur/plateforme/format/période
 }
 
 model Score {
@@ -119,6 +122,10 @@ model Score {
   estimatedViews          Int?     // Vues estimées si collab future
   estimatedCPV            Float?   // CPV estimé
   roiScore                Float?   // Score de ROI (0-100)
+
+  // Détails par format (JSON)
+  formatBreakdown         Json?    // Breakdown des collabs réelles par format
+  organicBreakdown        Json?    // Breakdown du potentiel organique par format/plateforme
 
   computedAt              DateTime @default(now())
 }

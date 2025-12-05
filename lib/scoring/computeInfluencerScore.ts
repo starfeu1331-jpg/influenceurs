@@ -25,11 +25,20 @@ export type ComputedScore = {
   estimatedViews?: number;
   estimatedCPV?: number;
   roiScore?: number;
-  // Détail par format
+  // Détail par format (collabs réelles)
   formatBreakdown?: {
     format: string;
     count: number;
     avgPrice: number;
+    avgViews: number;
+    cpv: number;
+    roiScore: number;
+  }[];
+  // Détail potentiel organique par format/plateforme
+  organicBreakdown?: {
+    platform: string;
+    formatType: string;
+    price: number;
     avgViews: number;
     cpv: number;
     roiScore: number;
@@ -142,77 +151,92 @@ function computeImpactCollabsScore(collaborationStats: CollaborationStats[]): {
   };
 }
 
-// 2. Potentiel organique (0-100) - Basé sur ROI potentiel (tarifs × stats organiques)
+// 2. Potentiel organique (0-100) - ROI par format/plateforme
 function computeOrganicPotentialScore(
   influencer: Influencer & { 
     platforms: { platform: string; isMain: boolean; followers?: number | null }[];
     pricing: InfluencerPricing[];
   },
   statsSnapshots: StatsSnapshot[]
-): number {
+): { score: number; breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpv: number; roiScore: number }> } {
+  const breakdown: Array<{ platform: string; formatType: string; price: number; avgViews: number; cpv: number; roiScore: number }> = [];
+
   // Si pas de tarifs définis, on ne peut pas calculer le potentiel
   if (!influencer.pricing || influencer.pricing.length === 0) {
-    return 0;
+    return { score: 0, breakdown };
   }
 
-  // Filtrer sur la plateforme principale
-  const mainPlatform = influencer.platforms.find(p => p.isMain)?.platform || influencer.platforms[0]?.platform;
-  const relevantStats = statsSnapshots.filter(
-    s => s.platform === mainPlatform && s.avgViews !== null && s.avgViews > 0
-  );
+  // Pour chaque format tarifé, chercher les stats correspondantes
+  influencer.pricing.forEach(pricing => {
+    // Mapper le formatType du pricing vers la plateforme
+    let platform = 'INSTAGRAM';
+    if (pricing.formatType.includes('TIKTOK')) platform = 'TIKTOK';
+    if (pricing.formatType.includes('YOUTUBE')) platform = 'YOUTUBE';
 
-  if (relevantStats.length === 0) return 0;
+    // Chercher les stats pour ce format ET cette plateforme
+    const matchingStats = statsSnapshots.filter(
+      s => s.platform === platform && 
+           s.formatType === pricing.formatType &&
+           s.avgViews !== null && 
+           s.avgViews > 0
+    );
 
-  // Calculer la moyenne des vues sur les périodes récentes (priorité aux plus récentes)
-  const statsByPeriod: Record<string, StatsSnapshot[]> = {
-    LAST_15_DAYS: [],
-    LAST_30_DAYS: [],
-    LAST_3_MONTHS: [],
-  };
+    if (matchingStats.length === 0) return;
 
-  relevantStats.forEach(s => {
-    if (statsByPeriod[s.period]) {
-      statsByPeriod[s.period].push(s);
+    // Prioriser les stats les plus récentes
+    const statsByPeriod: Record<string, StatsSnapshot[]> = {
+      LAST_15_DAYS: [],
+      LAST_30_DAYS: [],
+      LAST_3_MONTHS: [],
+    };
+
+    matchingStats.forEach(s => {
+      if (statsByPeriod[s.period]) {
+        statsByPeriod[s.period].push(s);
+      }
+    });
+
+    // Prendre les stats les plus récentes disponibles
+    let recentStats: StatsSnapshot[] = [];
+    if (statsByPeriod.LAST_15_DAYS.length > 0) {
+      recentStats = statsByPeriod.LAST_15_DAYS;
+    } else if (statsByPeriod.LAST_30_DAYS.length > 0) {
+      recentStats = statsByPeriod.LAST_30_DAYS;
+    } else if (statsByPeriod.LAST_3_MONTHS.length > 0) {
+      recentStats = statsByPeriod.LAST_3_MONTHS;
     }
+
+    if (recentStats.length === 0) return;
+
+    // Calculer les moyennes
+    const avgViews = recentStats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / recentStats.length;
+    const avgLikes = recentStats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / recentStats.length;
+    const avgComments = recentStats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / recentStats.length;
+
+    // Calculer le ROI pour ce format
+    const roi = calculateROI(pricing.price, avgViews, avgLikes, avgComments);
+
+    breakdown.push({
+      platform,
+      formatType: pricing.formatType,
+      price: pricing.price,
+      avgViews: Math.round(avgViews),
+      cpv: roi.cpv,
+      roiScore: roi.roiScore,
+    });
   });
 
-  // Prendre les stats les plus récentes disponibles
-  let avgViews = 0;
-  let avgLikes = 0;
-  let avgComments = 0;
-
-  if (statsByPeriod.LAST_15_DAYS.length > 0) {
-    const stats = statsByPeriod.LAST_15_DAYS;
-    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
-    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
-    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
-  } else if (statsByPeriod.LAST_30_DAYS.length > 0) {
-    const stats = statsByPeriod.LAST_30_DAYS;
-    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
-    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
-    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
-  } else if (statsByPeriod.LAST_3_MONTHS.length > 0) {
-    const stats = statsByPeriod.LAST_3_MONTHS;
-    avgViews = stats.reduce((sum, s) => sum + (s.avgViews || 0), 0) / stats.length;
-    avgLikes = stats.reduce((sum, s) => sum + (s.avgLikes || 0), 0) / stats.length;
-    avgComments = stats.reduce((sum, s) => sum + (s.avgComments || 0), 0) / stats.length;
+  if (breakdown.length === 0) {
+    return { score: 0, breakdown };
   }
 
-  if (avgViews === 0) return 0;
+  // Score global = moyenne des scores ROI
+  const avgScore = breakdown.reduce((sum, b) => sum + b.roiScore, 0) / breakdown.length;
 
-  // Calculer le score ROI potentiel pour chaque format tarifé
-  const roiScores = influencer.pricing.map(pricing => {
-    // Calculer le ROI potentiel : prix / vues organiques
-    const roi = calculateROI(pricing.price, avgViews, avgLikes, avgComments);
-    return roi.roiScore;
-  });
-
-  if (roiScores.length === 0) return 0;
-
-  // Moyenne des scores ROI potentiels
-  const avgROIScore = roiScores.reduce((sum, s) => sum + s, 0) / roiScores.length;
-
-  return Math.round(avgROIScore * 100) / 100;
+  return {
+    score: Math.round(avgScore * 100) / 100,
+    breakdown,
+  };
 }
 
 // 3. Rentabilité (0-100) - Basé sur le CPV réel par format
@@ -290,7 +314,8 @@ export async function computeInfluencerScore(
   // Calculer chaque sous-score
   const impactResult = computeImpactCollabsScore(collaborationStats);
   const impactCollabsScore = impactResult.score;
-  const organicPotentialScore = computeOrganicPotentialScore(influencer, statsSnapshots);
+  const organicResult = computeOrganicPotentialScore(influencer, statsSnapshots);
+  const organicPotentialScore = organicResult.score;
   const profitabilityScore = computeProfitabilityScore(collaborationStats);
   const strategicFitScore = computeStrategicFitScore(influencer);
 
@@ -366,5 +391,6 @@ export async function computeInfluencerScore(
     estimatedCPV: roiEstimate?.estimatedCPV,
     roiScore: roiEstimate?.roiScore,
     formatBreakdown: impactResult.breakdown,
+    organicBreakdown: organicResult.breakdown,
   };
 }

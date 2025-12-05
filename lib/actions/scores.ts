@@ -72,6 +72,8 @@ export async function recalculateScore(influencerId: string) {
       estimatedViews: computedScore.estimatedViews,
       estimatedCPV: computedScore.estimatedCPV,
       roiScore: computedScore.roiScore,
+      formatBreakdown: computedScore.formatBreakdown || [],
+      organicBreakdown: computedScore.organicBreakdown || [],
     },
   });
 
